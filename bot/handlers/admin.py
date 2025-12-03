@@ -328,11 +328,22 @@ async def show_product(callback: CallbackQuery):
     await callback.message.delete()
     
     if product.photo_path:
-        await callback.message.answer_photo(
-            photo=product.photo_path.replace('/static', 'https://localhost:5000/static'),
-            caption=text,
-            reply_markup=get_product_actions_keyboard(product_id)
-        )
+        file_path = Path('web') / product.photo_path.lstrip('/')
+        
+        if file_path.exists():
+            from aiogram.types import FSInputFile
+            photo = FSInputFile(file_path)
+            await callback.message.answer_photo(
+                photo=photo,
+                caption=text,
+                reply_markup=get_product_actions_keyboard(product_id)
+            )
+        else:
+            await callback.message.answer(
+                 text + f"\n\n⚠️ Фото не найдено: {file_path}",
+                reply_markup=markup,
+                parse_mode='HTML'
+            )
     else:
         await callback.message.answer(
             text,
